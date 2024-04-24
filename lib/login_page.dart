@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_assignment_sgx/home_page.dart';
 
 class Login extends StatefulWidget {
   final String title;
@@ -9,10 +10,12 @@ class Login extends StatefulWidget {
   _LoginState createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+class _LoginState extends State<Login> {
+
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +69,7 @@ class _LoginState extends State<Login> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         // Navigate the user to the Home page
+                        _login(context);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please fill input')),
@@ -83,3 +87,20 @@ class _LoginState extends State<Login> {
     );
   }
 }
+
+  void _login(BuildContext context) {
+    if (emailController.text == 'user@gmail.com' && passwordController.text == 'password') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid email or password')),
+      );
+    }
+  }
+
+
