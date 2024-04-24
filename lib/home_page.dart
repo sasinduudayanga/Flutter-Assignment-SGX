@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_assignment_sgx/comment_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatelessWidget {
   @override
@@ -7,8 +10,8 @@ class HomePage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Home'),
-          bottom: TabBar(
+          title: const Text('Home'),
+          bottom: const TabBar(
             tabs: [
               Tab(text: 'Albums'),
               Tab(text: 'Posts'),
@@ -26,107 +29,148 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class AlbumsPage extends StatelessWidget {
+class AlbumsPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Albums Page'),
-    );
-  }
+  _AlbumsPageState createState() => _AlbumsPageState();
 }
 
-class PostsPage extends StatelessWidget {
+class _AlbumsPageState extends State<AlbumsPage> {
+  late Future<List<Album>> _albums;
+
+  @override
+  void initState() {
+    super.initState();
+    _albums = fetchAlbums();
+  }
+
+  Future<List<Album>> fetchAlbums() async {
+    final response = await http
+        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
+    if (response.statusCode == 200) {
+      Iterable list = json.decode(response.body);
+      return list.map((model) => Album.fromJson(model)).toList();
+    } else {
+      throw Exception('Failed to load albums');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: posts.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(posts[index].title),
-          subtitle: Text(posts[index].body),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CommentPage(postId: posts[index].id),
-              ),
-            );
-          },
-        );
+    return FutureBuilder<List<Album>>(
+      future: _albums,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(snapshot.data![index].title),
+              );
+            },
+          );
+        }
       },
     );
   }
 }
 
-class CommentPage extends StatelessWidget {
-  final int postId;
+class PostsPage extends StatefulWidget {
+  @override
+  _PostsPageState createState() => _PostsPageState();
+}
 
-  CommentPage({required this.postId});
+class _PostsPageState extends State<PostsPage> {
+  late Future<List<Post>> _posts;
+
+  @override
+  void initState() {
+    super.initState();
+    _posts = fetchPosts();
+  }
+
+  Future<List<Post>> fetchPosts() async {
+    final response =
+        await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts'));
+    if (response.statusCode == 200) {
+      Iterable list = json.decode(response.body);
+      return list.map((model) => Post.fromJson(model)).toList();
+    } else {
+      throw Exception('Failed to load posts');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Comments'),
-      ),
-      body: FutureBuilder<List<Comment>>(
-        future: fetchComments(postId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(snapshot.data![index].name),
-                  subtitle: Text(snapshot.data![index].body),
-                );
-              },
-            );
-          }
-        },
-      ),
+    return FutureBuilder<List<Post>>(
+      future: _posts,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(snapshot.data![index].title),
+                subtitle: Text(snapshot.data![index].body),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommentPage(post: snapshot.data![index]),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+      },
+    );
+  }
+}
+
+class Album {
+  final int userId;
+  final int id;
+  final String title;
+
+  Album({required this.userId, required this.id, required this.title});
+
+  factory Album.fromJson(Map<String, dynamic> json) {
+    return Album(
+      userId: json['userId'],
+      id: json['id'],
+      title: json['title'],
     );
   }
 }
 
 class Post {
+  final int userId;
   final int id;
   final String title;
   final String body;
 
-  Post({required this.id, required this.title, required this.body});
+  Post(
+      {required this.userId,
+      required this.id,
+      required this.title,
+      required this.body});
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      userId: json['userId'],
+      id: json['id'],
+      title: json['title'],
+      body: json['body'],
+    );
+  }
 }
 
-class Comment {
-  final int postId;
-  final int id;
-  final String name;
-  final String body;
-
-  Comment({required this.postId, required this.id, required this.name, required this.body});
-}
-
-List<Post> posts = [
-  Post(id: 1, title: 'Post 1', body: 'Body of Post 1'),
-  Post(id: 2, title: 'Post 2', body: 'Body of Post 2'),
-];
-
-Future<List<Comment>> fetchComments(int postId) async {
-  // Simulating fetching comments from an API
-  await Future.delayed(Duration(seconds: 1));
-
-  // Returning dummy comments for demonstration
-  return List.generate(
-    5,
-    (index) => Comment(
-      postId: postId,
-      id: index + 1,
-      name: 'Comment ${index + 1}',
-      body: 'Body of Comment ${index + 1}',
-    ),
-  );
-}

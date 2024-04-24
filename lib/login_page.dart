@@ -89,7 +89,7 @@ class _LoginState extends State<Login> {
 }
 
   void _login(BuildContext context) {
-    if (emailController.text == 'user@gmail.com' && passwordController.text == 'password') {
+    if (emailController.text == 'admin' && passwordController.text == 'admin') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
