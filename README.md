@@ -1,4 +1,4 @@
 # Flutter-Assignment-SGX
 
-emai: admin,
+userName: admin,
 password: admin
