@@ -1,66 +1,89 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import 'comment_page.dart';
 
-class PostsPage extends StatefulWidget {
-  const PostsPage({super.key});
+class PostProvider extends ChangeNotifier {
+  List<Post> _posts = [];
 
-  @override
-  _PostsPageState createState() => _PostsPageState();
-}
+  List<Post> get posts => _posts;
 
-class _PostsPageState extends State<PostsPage> {
-  late Future<List<Post>> _posts;
-
-  @override
-  void initState() {
-    super.initState();
-    _posts = fetchPosts();
-  }
-
-  Future<List<Post>> fetchPosts() async {
-    final response =
-    await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts'));
+  Future<void> fetchPosts() async {
+    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts'));
     if (response.statusCode == 200) {
       Iterable list = json.decode(response.body);
-      return list.map((model) => Post.fromJson(model)).toList();
+      _posts = list.map((model) => Post.fromJson(model)).toList();
+      notifyListeners();
     } else {
       throw Exception('Failed to load posts');
     }
   }
+}
+
+class PostsPage extends StatelessWidget {
+  const PostsPage({Key? key});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Post>>(
-      future: _posts,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(snapshot.data![index].title),
-                subtitle: Text(snapshot.data![index].body),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CommentPage(post: snapshot.data![index]),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        }
-      },
+    return ChangeNotifierProvider(
+      create: (_) => PostProvider(),
+      child: const _PostsPageContent(),
+    );
+  }
+}
+
+class _PostsPageContent extends StatefulWidget {
+  const _PostsPageContent({Key? key});
+
+  @override
+  __PostsPageContentState createState() => __PostsPageContentState();
+}
+
+class __PostsPageContentState extends State<_PostsPageContent> {
+  late Future<void> _fetchPostsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final postProvider = Provider.of<PostProvider>(context, listen: false);
+    _fetchPostsFuture = postProvider.fetchPosts();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FutureBuilder<void>(
+        future: _fetchPostsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            final postProvider = Provider.of<PostProvider>(context);
+            final posts = postProvider.posts;
+            return ListView.builder(
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(posts[index].title),
+                  subtitle: Text(posts[index].body),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommentPage(post: posts[index]),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }

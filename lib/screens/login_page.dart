@@ -38,7 +38,7 @@ class _LoginState extends State<Login> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text("Flutter App"),
       ),
       body: Form(
         key: _formKey,

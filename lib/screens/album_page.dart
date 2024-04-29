@@ -2,56 +2,79 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_assignment_sgx/screens/login_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
-class AlbumsPage extends StatefulWidget {
-  const AlbumsPage({super.key});
+class AlbumProvider extends ChangeNotifier {
+  List<Album> _albums = [];
 
-  @override
-  _AlbumsPageState createState() => _AlbumsPageState();
-}
+  List<Album> get albums => _albums;
 
-class _AlbumsPageState extends State<AlbumsPage> {
-  late Future<List<Album>> _albums;
-
-  @override
-  void initState() {
-    super.initState();
-    _albums = fetchAlbums();
-  }
-
-  Future<List<Album>> fetchAlbums() async {
-    final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
+  Future<void> fetchAlbums() async {
+    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
     if (response.statusCode == 200) {
       Iterable list = json.decode(response.body);
-      return list.map((model) => Album.fromJson(model)).toList();
+      _albums = list.map((model) => Album.fromJson(model)).toList();
+      notifyListeners();
     } else {
       throw Exception('Failed to load albums');
     }
   }
+}
+
+class AlbumsPage extends StatelessWidget {
+  const AlbumsPage({Key? key});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Album>>(
-      future: _albums,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(snapshot.data![index].title),
-              );
+    return ChangeNotifierProvider(
+      create: (_) => AlbumProvider(),
+      child: _AlbumsPageContent(),
+    );
+  }
+}
 
-            },
-          );
-        }
-      },
+class _AlbumsPageContent extends StatefulWidget {
+  const _AlbumsPageContent({Key? key});
+
+  @override
+  __AlbumsPageContentState createState() => __AlbumsPageContentState();
+}
+
+class __AlbumsPageContentState extends State<_AlbumsPageContent> {
+  late Future<void> _fetchAlbumsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final albumProvider = Provider.of<AlbumProvider>(context, listen: false);
+    _fetchAlbumsFuture = albumProvider.fetchAlbums();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FutureBuilder<void>(
+        future: _fetchAlbumsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            final albumProvider = Provider.of<AlbumProvider>(context);
+            final albums = albumProvider.albums;
+            return ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: albums.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(albums[index].title),
+                );
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'album_page.dart';
+import 'login_page.dart';
 import 'post_page.dart';
 
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +22,21 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            AlbumsPage(),
-            PostsPage(),
-          ],
+        body: Consumer<AuthProvider>(
+          builder: (context, authProvider, _) {
+            if (authProvider.isAuthenticated) {
+              return const TabBarView(
+                children: [
+                  AlbumsPage(),
+                  PostsPage(),
+                ],
+              );
+            } else {
+              return const Center(
+                child: Text('Please login to view content'),
+              );
+            }
+          },
         ),
       ),
     );
