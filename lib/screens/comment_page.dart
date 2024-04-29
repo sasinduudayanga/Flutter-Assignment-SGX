@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_assignment_sgx/home_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'post_page.dart';
 
 class CommentPage extends StatefulWidget {
   final Post post;
@@ -42,7 +42,7 @@ class _CommentPageState extends State<CommentPage> {
         future: _comments,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_assignment_sgx/home_page.dart';
+import 'package:flutter_assignment_sgx/screens/home_page.dart';
 
 class Login extends StatefulWidget {
   final String title;
