@@ -1,5 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_assignment_sgx/screens/home_page.dart';
+import 'package:provider/provider.dart';
+
+class AuthProvider extends ChangeNotifier {
+  bool _isAuthenticated = false;
+
+  bool get isAuthenticated => _isAuthenticated;
+
+  Future<void> login(String email, String password) async {
+    // Perform authentication logic here
+    if (email == 'admin' && password == 'admin') {
+      _isAuthenticated = true;
+    } else {
+      _isAuthenticated = false;
+    }
+    notifyListeners();
+  }
+}
 
 class Login extends StatefulWidget {
   final String title;
@@ -10,15 +27,15 @@ class Login extends StatefulWidget {
   _LoginState createState() => _LoginState();
 }
 
+class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-class _LoginState extends State<Login> {
-
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -32,7 +49,7 @@ class _LoginState extends State<Login> {
             children: [
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
@@ -47,7 +64,7 @@ class _LoginState extends State<Login> {
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: passwordController,
                   obscureText: true,
@@ -63,12 +80,15 @@ class _LoginState extends State<Login> {
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
                 child: Center(
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // Navigate the user to the Home page
+                        authProvider.login(
+                          emailController.text,
+                          passwordController.text,
+                        );
                         _login(context);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,14 +106,18 @@ class _LoginState extends State<Login> {
       ),
     );
   }
-}
+
 
   void _login(BuildContext context) {
-    if (emailController.text == 'admin' && passwordController.text == 'admin') {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    authProvider.login(emailController.text, passwordController.text);
+
+    if (authProvider.isAuthenticated) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePage(),
+          builder: (context) => const HomePage(),
         ),
       );
     } else {
@@ -103,4 +127,4 @@ class _LoginState extends State<Login> {
     }
   }
 
-
+}
