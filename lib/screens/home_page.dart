@@ -15,6 +15,19 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Home'),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  Provider.of<AuthProvider>(context, listen: false).logout();
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Login())
+                  );
+                },
+                icon: const Icon(Icons.logout),
+
+            )
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Albums'),

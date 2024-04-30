@@ -25,12 +25,16 @@ class AuthProvider extends ChangeNotifier {
 
     return _isAuthenticated;
   }
+
+  void logout() {
+    _isAuthenticated = false;
+    notifyListeners();
+  }
 }
 
 class Login extends StatefulWidget {
-  final String title;
 
-  const Login({Key? key, required this.title}) : super(key: key);
+  const Login({super.key});
 
   @override
   _LoginState createState() => _LoginState();
@@ -118,6 +122,8 @@ class _LoginState extends State<Login> {
       emailController.text,
       passwordController.text,
     );
+
+    if (!context.mounted) return;
 
     if (success) {
       // Clear text fields
