@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../auth_provider.dart';
 import 'album_page.dart';
 import 'login_page.dart';
 import 'post_page.dart';
@@ -14,7 +15,6 @@ class HomePage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Home'),
           actions: [
             IconButton(
                 onPressed: () {
