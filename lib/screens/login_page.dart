@@ -4,17 +4,26 @@ import 'package:provider/provider.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
+  bool _isLoading = false;
 
   bool get isAuthenticated => _isAuthenticated;
+  bool get isLoading => _isLoading;
 
-  Future<void> login(String email, String password) async {
-    // Perform authentication logic here
+  Future<bool> login(String email, String password) async {
+
+    _isLoading = true;
+    notifyListeners();
+
     if (email == 'admin' && password == 'admin') {
       _isAuthenticated = true;
     } else {
       _isAuthenticated = false;
     }
+
+    _isLoading = false;
     notifyListeners();
+
+    return _isAuthenticated;
   }
 }
 
@@ -85,18 +94,14 @@ class _LoginState extends State<Login> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        authProvider.login(
-                          emailController.text,
-                          passwordController.text,
-                        );
-                        _login(context);
+                        _login(context, authProvider);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please fill input')),
                         );
                       }
                     },
-                    child: const Text('Submit'),
+                    child: authProvider.isLoading ? const CircularProgressIndicator() : const Text("Submit"),
                   ),
                 ),
               ),
@@ -108,12 +113,18 @@ class _LoginState extends State<Login> {
   }
 
 
-  void _login(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  void _login(BuildContext context, AuthProvider authProvider) async {
+    final success = await authProvider.login(
+      emailController.text,
+      passwordController.text,
+    );
 
-    authProvider.login(emailController.text, passwordController.text);
+    if (success) {
+      // Clear text fields
+      emailController.clear();
+      passwordController.clear();
 
-    if (authProvider.isAuthenticated) {
+      // Navigate to home page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 class AlbumProvider extends ChangeNotifier {
   List<Album> _albums = [];
 
-  List<Album> get albums => _albums;
+  List<Album> get albums => _albums; //getter
 
   Future<void> fetchAlbums() async {
     final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
