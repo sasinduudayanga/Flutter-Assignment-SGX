@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_assignment_sgx/screens/my_profile.dart';
 import 'package:provider/provider.dart';
 import '../auth_provider.dart';
 import 'album_page.dart';
@@ -30,8 +31,41 @@ class HomePage extends StatelessWidget {
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Albums'),
-              Tab(text: 'Posts'),
+              Tab(text: 'Albums', icon: Icon(Icons.album)),
+              Tab(text: 'Posts', icon: Icon(Icons.document_scanner),),
+            ],
+          ),
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
+                child: Center(
+                    child: Text('Flutter App')
+                ),
+              ),
+              ListTile(
+                title: const Text('My Profile'),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const MyProfile(),
+                      )
+                  );
+                },
+              ),
+              ListTile(
+                title: const Text('About'),
+                onTap: () {
+                  // Update the state of the app.
+                  // ...
+                },
+              ),
             ],
           ),
         ),
